@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mp4 On Ascii Player</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    color: white;
+    font-family: monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#container {
+    text-align: center;
+}
+
+pre {
+    font-size: 8px;
+    line-height: 8px;
+    white-space: pre;
+    margin-top: 15px;
+}
+
+button {
+    background: #111;
+    color: white;
+    border: 1px solid #444;
+    padding: 6px 14px;
+    margin: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #222;
+}
+
+#file {
+    display: none;
+}
+
+#status {
+    margin-top: 8px;
+    font-size: 13px;
+    animation: rgb 3s linear infinite;
+    text-shadow: 0 0 8px currentColor;
+}
+
+@keyframes rgb {
+    0%   { color: red; }
+    16%  { color: orange; }
+    33%  { color: yellow; }
+    50%  { color: lime; }
+    66%  { color: cyan; }
+    83%  { color: magenta; }
+    100% { color: red; }
+}
+
+/* GitHub button */
+#github-btn {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    background: #111;
+    color: white;
+    border: 1px solid #444;
+    padding: 6px 12px;
+    font-family: monospace;
+    font-size: 12px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#github-btn:hover {
+    background: #222;
+}
+</style>
+</head>
+<body>
+
+<div id="container">
+    <h2>Mp4 On Ascii Player</h2>
+
+    <button id="load">Load File</button>
+    <button id="Start">Start</button>
+
+    <div id="status">Waiting for file...</div>
+
+    <pre id="ascii"></pre>
+</div>
+
+<input type="file" id="file" accept="video/*">
+<video id="video" hidden></video>
+<canvas id="canvas" hidden></canvas>
+
+<a id="github-btn" href="https://github.com/Ryuzu-VBC" target="_blank">GitHub</a>
+
+<script>
+const ASCII = "@%#*+=-:. ";
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const output = document.getElementById("ascii");
+const status = document.getElementById("status");
+
+let running = false;
+let fileReady = false;
+
+// Load button triggers hidden file input
+document.getElementById("load").addEventListener("click", () => {
+    document.getElementById("file").click();
+});
+
+// File selected
+document.getElementById("file").addEventListener("change", e => {
+    if (!e.target.files.length) return;
+    video.src = URL.createObjectURL(e.target.files[0]);
+    fileReady = true;
+    status.textContent = "File ready";
+});
+
+// Start ASCII
+document.getElementById("Start").addEventListener("click", () => {
+    if (!fileReady) return;
+    video.play();
+    running = true;
+    status.textContent = "═══════════⊹⊱❖By Ryuzu-VBC❖⊰⊹═══════════";
+    requestAnimationFrame(render);
+});
+
+function render() {
+    if (!running || video.paused || video.ended) return;
+
+    if (video.videoWidth === 0) {
+        requestAnimationFrame(render);
+        return;
+    }
+
+    const width = 120;
+    const height = Math.floor(video.videoHeight / video.videoWidth * width * 0.55);
+
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.drawImage(video, 0, 0, width, height);
+    const pixels = ctx.getImageData(0, 0, width, height).data;
+
+    let ascii = "";
+    for (let i = 0; i < pixels.length; i += 4) {
+        const gray = 0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2];
+        ascii += ASCII[Math.floor(gray / 256 * ASCII.length)];
+        if ((i / 4 + 1) % width === 0) ascii += "\n";
+    }
+
+    output.textContent = ascii;
+    requestAnimationFrame(render);
+}
+</script>
+
+</body>
+</html>
